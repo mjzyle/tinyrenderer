@@ -1,6 +1,11 @@
 ﻿  main.cpp
+c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(68): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(69): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(70): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(71): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
   Generating Code...
   Skipping... (no relevant changes detected)
   tgaimage.cpp
+  model.cpp
   tinyrenderer.vcxproj -> C:\Projects\tinyrenderer\source_code\tinyrenderer\Debug\tinyrenderer.exe
   tinyrenderer.vcxproj -> C:\Projects\tinyrenderer\source_code\tinyrenderer\Debug\tinyrenderer.pdb (Partial PDB)
