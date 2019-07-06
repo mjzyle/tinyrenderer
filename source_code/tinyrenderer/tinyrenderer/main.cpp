@@ -11,13 +11,18 @@ const TGAColor green = TGAColor(0, 255, 0, 255);
 const TGAColor blue = TGAColor(0, 0, 255, 255);
 const int width = 800;
 const int height = 800;
-Model *model = new Model("obj/african_head.obj");
+Model *model = new Model("obj/head.obj");
+
+// Lighting variables
+Vec3f light_dir(0, 0, -1);
 
 
 // Line drawing method using Bresenham's line algorithm
-void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
+void line(Vec2i v0, Vec2i v1, TGAImage &image, TGAColor color) {
 
 	bool steep = false;
+
+	int x0 = v0.x, y0 = v0.y, x1 = v1.x, y1 = v1.y;
 
 	if (std::abs(x0 - x1) < std::abs(y0 - y1)) {
 		std::swap(x0, y0);
@@ -84,39 +89,74 @@ void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
 }
 
 
+void triangle(Vec3f *points, float *zbuffer, TGAImage &image, TGAColor color) {
+
+}
+
+// Rasterization method
+void rasterize(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int ybuffer[]) {
+	if (p0.x > p1.x) {
+		std::swap(p0, p1);
+	}
+	for (int x = p0.x; x < p1.x; x++) {
+		float t = (x - p0.x) / (float)(p1.x - p0.x);
+		int y = p0.y * (1. - t) + p1.y * t;
+		if (ybuffer[x] < y) {
+			ybuffer[x] = y;
+			image.set(x, 0, color);
+		}
+	}
+}
+
 // Main method
 int main(int argc, char** argv) {
 
-	TGAImage image(width, height, TGAImage::RGB);
+	TGAImage scene(width, height, TGAImage::RGB);
+	/*
+	// scene "2d mesh"
+	line(Vec2i(20, 34), Vec2i(744, 400), scene, red);
+	line(Vec2i(120, 434), Vec2i(444, 400), scene, green);
+	line(Vec2i(330, 463), Vec2i(594, 200), scene, blue);
+
+	// screen line
+	line(Vec2i(10, 10), Vec2i(790, 10), scene, white);
+	*/
+	
+	float *zbuffer = new float[width * height];
 	
 	// Draw mesh 
-	/*
 	for (int i = 0; i < model->nfaces(); i++) {
 		std::vector<int> face = model->face(i);
-
+		Vec2i screen_coords[3];
+		Vec3f world_coords[3];
 		for (int j = 0; j < 3; j++) {
-			Vec3f v0 = model->vert(face[j]);
-			Vec3f v1 = model->vert(face[(j + 1) % 3]);
-
-			int x0 = (v0.x + 1.0) * width / 2;
-			int y0 = (v0.y + 1.0) * height / 2;
-			int x1 = (v1.x + 1.0) * width / 2;
-			int y1 = (v1.y + 1.0) * height / 2;
-
-			line(x0, y0, x1, y1, image, white);
+			Vec3f v = model->vert(face[j]);
+			screen_coords[j] = Vec2i((v.x + 1.) * width / 2., (v.y + 1.) * height / 2.);
+			world_coords[j] = v;
 		}
-	}*/
-
-	Vec2i t0[3] = { Vec2i(10, 70), Vec2i(50, 160), Vec2i(70, 80) };
-	Vec2i t1[3] = { Vec2i(180, 50), Vec2i(150, 1), Vec2i(70, 180) };
-	Vec2i t2[3] = { Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180) };
-	triangle(t0[0], t0[1], t0[2], image, red);
-	triangle(t1[0], t1[1], t1[2], image, green);
-	triangle(t2[0], t2[1], t2[2], image, blue);
-
-	image.flip_vertically();
-	image.write_tga_file("output.tga");
+		Vec3f norm = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
+		norm.normalize();
+		float intensity = norm * light_dir;
+		if (intensity > 0) {
+			triangle(screen_coords, zbuffer, scene, TGAColor(intensity * 255, intensity * 255, intensity * 255, 255));
+		}
+	}
 	
+	/*int *zbuffer = new int[width * height];
+
+	TGAImage render(width, 16, TGAImage::RGB);
+	int ybuffer[width];
+	for (int i = 0; i < width; i++) {
+		ybuffer[i] = std::numeric_limits<int>::min();    // Initialize y-buffer to -infinity
+	}
+
+	rasterize(Vec2i(20, 34), Vec2i(744, 400), render, red, ybuffer);
+	rasterize(Vec2i(120, 434), Vec2i(444, 400), render, green, ybuffer);
+	rasterize(Vec2i(330, 463), Vec2i(594, 200), render, blue, ybuffer);*/
+
+	scene.flip_vertically();
+	scene.write_tga_file("scene.tga");
+
 	return 0;
 
 }

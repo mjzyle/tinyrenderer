@@ -1,11 +1,8 @@
 ﻿  main.cpp
+c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(99): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
 c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\geometry.h(18): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
   c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\geometry.h(18): note: while compiling class template member function 'Vec2<int> Vec2<int>::operator *(float) const'
-  c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(76): note: see reference to function template instantiation 'Vec2<int> Vec2<int>::operator *(float) const' being compiled
-  c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(59): note: see reference to class template instantiation 'Vec2<int>' being compiled
-  Generating Code...
-  Skipping... (no relevant changes detected)
-  tgaimage.cpp
-  model.cpp
+  c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(81): note: see reference to function template instantiation 'Vec2<int> Vec2<int>::operator *(float) const' being compiled
+  c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(21): note: see reference to class template instantiation 'Vec2<int>' being compiled
   tinyrenderer.vcxproj -> C:\Projects\tinyrenderer\source_code\tinyrenderer\Debug\tinyrenderer.exe
   tinyrenderer.vcxproj -> C:\Projects\tinyrenderer\source_code\tinyrenderer\Debug\tinyrenderer.pdb (Partial PDB)
