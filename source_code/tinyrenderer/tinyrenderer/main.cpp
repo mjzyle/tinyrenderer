@@ -1,5 +1,7 @@
 #include <vector>
 #include <cmath>
+#include <cstdlib>
+#include <algorithm>
 #include "tgaimage.h"
 #include "geometry.h"
 #include "model.h"
@@ -60,7 +62,53 @@ void line(Vec2i v0, Vec2i v1, TGAImage &image, TGAColor color) {
 }
 
 
-// Triangle drawing method
+// Determine barycentric coordinates of a 3D triangle
+Vec3f barycentric(Vec3f *points, Vec3f p) {
+	Vec3f u = Vec3f(points[2].x - points[0].x, points[1].x - points[0].x, points[0].x - p.x) 
+			^ Vec3f(points[2].y - points[0].y, points[1].y - points[0].y, points[0].y - p.y);
+	
+	if (std::abs(u.z) > 1e-2) {
+		return Vec3f(1.0f - (u.x + u.y) / u.z, u.y / u.z, u.x / u.z);
+	}
+
+	return Vec3f(-1.0f, 1.0f, 1.0f);
+}
+
+
+// Improved triangle drawing method using bounding box and barycentric coordinates
+void triangle(Vec3f *points, float *zbuffer, TGAImage &image, TGAColor color) {
+	Vec2f bboxmin( std::numeric_limits<float>::max(),  std::numeric_limits<float>::max());
+	Vec2f bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+	Vec2f clamp(image.get_width() - 1, image.get_height() - 1);
+
+	for (int i = 0; i < 3; i++) {
+		bboxmin.x = std::max(   0.0f, std::min(bboxmin.x, points[i].x));
+		bboxmax.x = std::min(clamp.x, std::max(bboxmax.x, points[i].x));
+		bboxmin.y = std::max(   0.0f, std::min(bboxmin.y, points[i].y));
+		bboxmax.y = std::min(clamp.y, std::max(bboxmax.y, points[i].y));
+	}
+
+	Vec3f p;
+	for (p.x = bboxmin.x; p.x <= bboxmax.x; p.x++) {
+		for (p.y = bboxmin.y; p.y <= bboxmax.y; p.y++) {
+			Vec3f bc_screen = barycentric(points, p);
+			if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0) continue; 
+			
+			p.z = 0;
+			p.z += points[0].z * bc_screen.x;
+			p.z += points[1].z * bc_screen.y;
+			p.z += points[2].z * bc_screen.z;
+			if (zbuffer[int(p.x + p.y * width)] < p.z) {
+				zbuffer[int(p.x + p.y * width)] = p.z;
+				image.set(p.x, p.y, color);
+			}
+			
+		}
+	}
+}
+
+
+// Triangle drawing method using half-half fill technique
 void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
 	// Don't bother with triangles that are just a line
 	if (t0.y == t1.y && t0.y == t2.y) return;
@@ -73,11 +121,11 @@ void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
 	// Draw triangles
 	int total_height = t2.y - t0.y;
 	for (int i = 0; i < total_height; i++) {
-		bool upper_half = i > t1.y - t0.y || t1.y == t0.y;					   // Indicates filling upper half of triangle (or entire if bottom is horizontal)
-		int segment_height = upper_half ? t2.y - t1.y : t1.y - t0.y + 1;       // Add 1 pixel to avoid division by zero
+		bool upper_half = i > t1.y - t0.y || t1.y == t0.y;			       // Indicates filling upper half of triangle (or entire if bottom is horizontal)
+		int segment_height = upper_half ? t2.y - t1.y : t1.y - t0.y;       // Add 1 pixel to avoid division by zero
 		float alpha = (float)i / total_height;
 		float beta = (float)(i - (upper_half ? t1.y - t0.y : 0)) / segment_height;
-	    
+
 		Vec2i A = t0 + (t2 - t0) * alpha;
 		Vec2i B = upper_half ? t1 + (t2 - t1) * beta : t0 + (t1 - t0) * beta;
 
@@ -89,11 +137,7 @@ void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
 }
 
 
-void triangle(Vec3f *points, float *zbuffer, TGAImage &image, TGAColor color) {
-
-}
-
-// Rasterization method
+// Rasterization method (2D)
 void rasterize(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int ybuffer[]) {
 	if (p0.x > p1.x) {
 		std::swap(p0, p1);
@@ -108,30 +152,20 @@ void rasterize(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int ybuffer[
 	}
 }
 
+
 // Main method
 int main(int argc, char** argv) {
 
 	TGAImage scene(width, height, TGAImage::RGB);
-	/*
-	// scene "2d mesh"
-	line(Vec2i(20, 34), Vec2i(744, 400), scene, red);
-	line(Vec2i(120, 434), Vec2i(444, 400), scene, green);
-	line(Vec2i(330, 463), Vec2i(594, 200), scene, blue);
-
-	// screen line
-	line(Vec2i(10, 10), Vec2i(790, 10), scene, white);
-	*/
-	
 	float *zbuffer = new float[width * height];
 	
-	// Draw mesh 
 	for (int i = 0; i < model->nfaces(); i++) {
 		std::vector<int> face = model->face(i);
-		Vec2i screen_coords[3];
+		Vec3f screen_coords[3];
 		Vec3f world_coords[3];
 		for (int j = 0; j < 3; j++) {
 			Vec3f v = model->vert(face[j]);
-			screen_coords[j] = Vec2i((v.x + 1.) * width / 2., (v.y + 1.) * height / 2.);
+			screen_coords[j] = Vec3f(int((v.x + 1.0) * width / 2.0 + 0.5), int((v.y + 1.0) * height / 2.0 + 0.5), v.z);
 			world_coords[j] = v;
 		}
 		Vec3f norm = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
@@ -142,6 +176,9 @@ int main(int argc, char** argv) {
 		}
 	}
 	
+	scene.flip_vertically();
+	scene.write_tga_file("scene.tga");
+
 	/*int *zbuffer = new int[width * height];
 
 	TGAImage render(width, 16, TGAImage::RGB);
@@ -153,9 +190,6 @@ int main(int argc, char** argv) {
 	rasterize(Vec2i(20, 34), Vec2i(744, 400), render, red, ybuffer);
 	rasterize(Vec2i(120, 434), Vec2i(444, 400), render, green, ybuffer);
 	rasterize(Vec2i(330, 463), Vec2i(594, 200), render, blue, ybuffer);*/
-
-	scene.flip_vertically();
-	scene.write_tga_file("scene.tga");
 
 	return 0;
 
