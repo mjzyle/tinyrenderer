@@ -1,12 +1,15 @@
 ﻿  main.cpp
-c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(82): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(103): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(147): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(168): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(175): warning C4244: 'argument': conversion from 'float' to 'unsigned char', possible loss of data
+c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(84): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(105): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(117): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(151): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(152): warning C4244: 'argument': conversion from 'float' to 'unsigned char', possible loss of data
+c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(153): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(197): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(225): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\geometry.h(18): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
   c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\geometry.h(18): note: while compiling class template member function 'Vec2<int> Vec2<int>::operator *(float) const'
-  c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(129): note: see reference to function template instantiation 'Vec2<int> Vec2<int>::operator *(float) const' being compiled
-  c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(23): note: see reference to class template instantiation 'Vec2<int>' being compiled
+  c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(179): note: see reference to function template instantiation 'Vec2<int> Vec2<int>::operator *(float) const' being compiled
+  c:\projects\tinyrenderer\source_code\tinyrenderer\tinyrenderer\main.cpp(25): note: see reference to class template instantiation 'Vec2<int>' being compiled
   tinyrenderer.vcxproj -> C:\Projects\tinyrenderer\source_code\tinyrenderer\Debug\tinyrenderer.exe
   tinyrenderer.vcxproj -> C:\Projects\tinyrenderer\source_code\tinyrenderer\Debug\tinyrenderer.pdb (Partial PDB)

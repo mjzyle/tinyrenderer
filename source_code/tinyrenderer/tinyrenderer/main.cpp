@@ -6,7 +6,7 @@
 #include "geometry.h"
 #include "model.h"
 
-// Mesh variables
+// Object variables
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255,   0,   0, 255);
 const TGAColor green = TGAColor(0, 255, 0, 255);
@@ -14,9 +14,11 @@ const TGAColor blue = TGAColor(0, 0, 255, 255);
 const int width = 800;
 const int height = 800;
 Model *model = new Model("obj/head.obj");
+TGAImage texture;
+
 
 // Lighting variables
-Vec3f light_dir(0, 0, -1);
+Vec3f light_dir(0, 0, -1.0);
 
 
 // Line drawing method using Bresenham's line algorithm
@@ -108,6 +110,54 @@ void triangle(Vec3f *points, float *zbuffer, TGAImage &image, TGAColor color) {
 }
 
 
+// Texture-mapped triangle
+void triangle_textured(Vec3f *points, float *zbuffer, TGAImage &image, std::vector<int> text, float intensity) {
+	Vec2f bboxmin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+	Vec2f bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+	Vec2f clamp(image.get_width() - 1, image.get_height() - 1);
+
+	for (int i = 0; i < 3; i++) {
+		bboxmin.x = std::max(0.0f, std::min(bboxmin.x, points[i].x));
+		bboxmax.x = std::min(clamp.x, std::max(bboxmax.x, points[i].x));
+		bboxmin.y = std::max(0.0f, std::min(bboxmin.y, points[i].y));
+		bboxmax.y = std::min(clamp.y, std::max(bboxmax.y, points[i].y));
+	}
+
+	// Save UV values for each vertex of the face
+	Vec3f uvA, uvB, uvC;
+	uvA = model->uv(text[0] - 1);
+	uvB = model->uv(text[1] - 1);
+	uvC = model->uv(text[2] - 1);
+
+	Vec3f p;
+	for (p.x = bboxmin.x; p.x <= bboxmax.x; p.x++) {
+		for (p.y = bboxmin.y; p.y <= bboxmax.y; p.y++) {
+			Vec3f bc_screen = barycentric(points, p);
+			if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0) continue;
+
+			p.z = 0;
+			p.z += points[0].z * bc_screen.x;
+			p.z += points[1].z * bc_screen.y;
+			p.z += points[2].z * bc_screen.z;
+			if (zbuffer[int(p.x + p.y * width)] < p.z) {
+				zbuffer[int(p.x + p.y * width)] = p.z;
+
+				// Interpolate UV values using barycentric coordinates of the face
+				Vec3f uvI; 
+				uvI.x = bc_screen.x * uvA.x + bc_screen.y * uvB.x + bc_screen.z * uvC.x;
+				uvI.y = bc_screen.x * uvA.y + bc_screen.y * uvB.y + bc_screen.z * uvC.y;
+
+				// Use inteprolated UV to determine color from the diffuse map
+				TGAColor temp = texture.get(uvI.x * texture.get_width(), uvI.y * texture.get_height());
+				TGAColor color = TGAColor(temp.r * intensity, temp.g * intensity, temp.b * intensity, 255);
+				image.set(p.x, p.y, color);
+			}
+
+		}
+	}
+}
+
+
 // Triangle drawing method using half-half fill technique
 void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
 	// Don't bother with triangles that are just a line
@@ -156,11 +206,18 @@ void rasterize(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int ybuffer[
 // Main method
 int main(int argc, char** argv) {
 
+	std::ofstream output;
+	output.open("report.txt");
+
+	texture.read_tga_file("obj/head_diffuse.tga");
+	texture.flip_vertically();
+
 	TGAImage scene(width, height, TGAImage::RGB);
 	float *zbuffer = new float[width * height];
 	
 	for (int i = 0; i < model->nfaces(); i++) {
 		std::vector<int> face = model->face(i);
+		std::vector<int> text = model->text(i);
 		Vec3f screen_coords[3];
 		Vec3f world_coords[3];
 		for (int j = 0; j < 3; j++) {
@@ -172,7 +229,7 @@ int main(int argc, char** argv) {
 		norm.normalize();
 		float intensity = norm * light_dir;
 		if (intensity > 0) {
-			triangle(screen_coords, zbuffer, scene, TGAColor(intensity * 255, intensity * 255, intensity * 255, 255));
+			triangle_textured(screen_coords, zbuffer, scene, text, intensity);
 		}
 	}
 	
@@ -190,6 +247,8 @@ int main(int argc, char** argv) {
 	rasterize(Vec2i(20, 34), Vec2i(744, 400), render, red, ybuffer);
 	rasterize(Vec2i(120, 434), Vec2i(444, 400), render, green, ybuffer);
 	rasterize(Vec2i(330, 463), Vec2i(594, 200), render, blue, ybuffer);*/
+
+	output.close();
 
 	return 0;
 
